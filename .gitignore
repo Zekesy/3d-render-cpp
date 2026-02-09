@@ -1,0 +1,37 @@
+
+# Build directories
+/build/
+/cmake-build-*/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Compiled objects
+*.o
+*.obj
+*.lo
+*.a
+*.so
+*.out
+
+# Executables
+*.exe
+*.dll
+*.app
+app
+
+# Debug files
+*.dSYM/
+*.gdb
+
+# Editor folders
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
