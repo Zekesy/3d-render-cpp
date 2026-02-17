@@ -78,14 +78,14 @@ void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoin
   }
 }
 
-void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  // ADDED Renderer::
+void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  
   int minX = std::max(0, (int)std::min({p0.x, p1.x, p2.x}));
-  int maxX = std::min(width - 1, (int)std::max({p0.x, p1.x, p2.x}));  // FIXED: std::min not std::max
+  int maxX = std::min(width - 1, (int)std::max({p0.x, p1.x, p2.x}));  
   int minY = std::max(0, (int)std::min({p0.y, p1.y, p2.y}));
-  int maxY = std::min(height - 1, (int)std::max({p0.y, p1.y, p2.y}));  // FIXED: std::min not std::max
+  int maxY = std::min(height - 1, (int)std::max({p0.y, p1.y, p2.y}));  
 
   for(int y = minY; y <= maxY; y++){
-    for(int x = minX; x <= maxX; x++){  // FIXED: was minX <= maxX
+    for(int x = minX; x <= maxX; x++){  
       float w0, w1, w2; 
       if(barycentricCoordinates(x, y, p0, p1, p2, w0, w1, w2)){
         float depth = w0 * p0.depth + w1 * p1.depth + w2 * p2.depth;
@@ -102,7 +102,7 @@ void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, c
 
 bool Renderer::barycentricCoordinates(
     int px, int py, 
-    const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2,  // FIXED: const ScreenPoint&
+    const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2,  
     float& w0, float& w1, float& w2) 
 {
   float x = px + 0.5f; 
@@ -123,18 +123,18 @@ bool Renderer::barycentricCoordinates(
   return (w0 >= 0) && (w1 >= 0) && (w2 >= 0);
 }
 
-bool Renderer::shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  // FIXED: ScreenPoint not ScreePoint
+bool Renderer::shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  
   const float edge1x = p1.x - p0.x;
   const float edge1y = p1.y - p0.y;
   const float edge2x = p2.x - p0.x;
-  const float edge2y = p2.y - p0.y;  // FIXED: was p2.y - p2.y
+  const float edge2y = p2.y - p0.y;  
   
   const float cross = edge1x * edge2y - edge1y * edge2x;
 
   return (cross <= 0); 
 }
 
-void Renderer::clear() {  // ADDED Renderer::
+void Renderer::clear() {  
   std::fill(colorBuffer.begin(), colorBuffer.end(), 0xFF000000);
   std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::infinity());
 }
