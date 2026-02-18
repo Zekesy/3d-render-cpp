@@ -13,6 +13,7 @@ struct Triangle {
   int v1_index;
   int v2_index;
   int v3_index;
+  std::string materialName;
 };
 
 struct Material {
@@ -34,13 +35,16 @@ class Mesh {
    //vertices 
   public:
     std::vector<Vertex> vertices; 
-    std::vector<std::vector<int>> faces; //vertex indexes of a face  
+    std::vector<Face> faces; //vertex indexes of a face  
     std::vector<Triangle> triangulatedFaces; //vertex indexes of a t
     std::map<std::string, Material> materials;
 
-
-    std::vector<Triangle> triangulateFace(const std::vector<int>& face);
+    
+    std::vector<Triangle> triangulateFace(const Face& face);
     void triangulate();
+    static Mesh parseMeshFromObj(const std::string obj_path, const std::string mtl_path);
+  private:
+    static void parseMtlFile(const std::string& mtl_path, std::map<std::string, Material>& materials);
 };
 
 

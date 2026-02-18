@@ -9,7 +9,7 @@ void Renderer::renderMeshWithTransform(Mesh& mesh, const Transform& transform){ 
   mesh.triangulate();
   
   std::vector<Vertex> transformedVertices = transformation(mesh.vertices, transform);
-  std::vector<ScreenPoint> screenVertices = projectVertices(transformedVertices, width, height);
+  std::vector<ScreenPoint> screenVertices = projectVertices(mesh,transformedVertices, width, height);
   
   clear(); 
   rasterizeTriangles(mesh, screenVertices);
@@ -37,8 +37,8 @@ std::vector<Vertex> Renderer::transformation(
   return result; 
 }
 
-ScreenPoint Renderer::project(const Vertex& vertex, int width, int height){
-  const float fov = 2.5f;
+ScreenPoint Renderer::project(const Vertex& vertex, int width, int height, uint32_t color){
+  const float fov = 1.0f;
   const float z = std::max(vertex.z, 0.1f);  // CHANGED 0.1 to 0.1f
   
   const float x = (vertex.x / z) * fov;
@@ -47,18 +47,19 @@ ScreenPoint Renderer::project(const Vertex& vertex, int width, int height){
   const float screenX = (x + 1.0f) * 0.5f * width;
   const float screenY = (1.0f - y) * 0.5f * height;
   
-  return {screenX, screenY, z};
+  return {screenX, screenY, z, color};
 }
 
-std::vector<ScreenPoint> Renderer::projectVertices(
-    const std::vector<Vertex>& vertices,  // ADDED const&
+std::vector<ScreenPoint> Renderer::projectVertices( 
+    const Mesh& mesh,
+    const std::vector<Vertex>& vertices,  
     int width, int height)
 {
   std::vector<ScreenPoint> result;
   result.reserve(vertices.size());
 
   for(const auto& v : vertices) {
-    result.push_back(project(v, width, height));  
+    result.push_back(project(v, width, height, 0xFFFFFFFF));  
   }
 
   return result; 
@@ -73,8 +74,20 @@ void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoin
     if(shouldCullFace(p0, p1, p2)) {
       continue; 
     }
+    
+    uint32_t triColor = 0xFFFFFFFF; //default white 
+    if(!tri.materialName.empty()) {
+      auto it = mesh.materials.find(tri.materialName);
+      if(it != mesh.materials.end()){
+        triColor = materialToColor(it->second);
+      }
+    }
 
-    rasterizeTriangle(p0, p1, p2);
+    ScreenPoint cp0 = p0; cp0.color = triColor;
+    ScreenPoint cp1 = p1; cp1.color = triColor;
+    ScreenPoint cp2 = p2; cp2.color = triColor;
+    
+    rasterizeTriangle(cp0, cp1, cp2);
   }
 }
 
@@ -93,7 +106,11 @@ void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, c
         int bufferIndex = y * width + x;
         if(depth < depthBuffer[bufferIndex]){
           depthBuffer[bufferIndex] = depth;
-          colorBuffer[bufferIndex] = 0xFFFFFFFF;
+          colorBuffer[bufferIndex] = p0.color;
+
+          //interpolate colors if want
+          // uint32_t interpolateColor = interpolateColor(p0.color, p1.color, p2.color, w0, w1, w2);
+          // colorBuffer[bufferIndex] = interpolateColor;
         }
       }
     }

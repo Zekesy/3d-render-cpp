@@ -8,18 +8,19 @@
 #include <stdexcept>
 
 
-std::vector<Triangle> Mesh::triangulateFace(const std::vector<int>& face) {
+std::vector<Triangle> Mesh::triangulateFace(const Face& f) {
   std::vector<Triangle> triangles;
+  const auto& face = f.vertices; 
 
   int n = face.size();
-  if(n < 3) return triangles; 
-  if(n == 3) {
-    triangles.push_back({face[0],face[1],face[2]});
-    return triangles; 
-  } 
+  if(n < 3) return triangles;  
 
   for(int i = 1; i < n-1; ++i){
-    Triangle tri = {face[0], face[i], face[i+1]};
+    Triangle tri;
+    tri.v1_index = face[0];
+    tri.v2_index = face[i];
+    tri.v3_index = face[i+1];
+    tri.materialName = f.materialName;
     triangles.push_back(tri);
   }
 
@@ -43,7 +44,7 @@ void Mesh::triangulate() {
 
 
 void Mesh::parseMtlFile(
-    std::string& mtl_path,
+    const std::string& mtl_path,
     std::map<std::string, Material>& materials
 ) {
   std::ifstream mtlInputFile(mtl_path);
@@ -56,10 +57,10 @@ void Mesh::parseMtlFile(
   Material current;
   bool hasMaterial = false; 
 
-  while (std::getLine(mtlInputFile, line)){
-    if( line.empty() || line[0] == "#") continue;
+  while (std::getline(mtlInputFile, line)){
+    if( line.empty() || line[0] == '#') continue;
 
-    std::istreamstream ss(line);
+    std::istringstream ss(line);
     std::string keyword; 
     ss >> keyword; 
 
@@ -86,22 +87,22 @@ void Mesh::parseMtlFile(
 }
 
 
-Mesh Mesh::parseMeshFromObj(std::string obj_path, std::string mtl_path){
+Mesh Mesh::parseMeshFromObj(const std::string obj_path, const std::string mtl_path){
   Mesh mesh; 
   
-  if(!mtp_path.empty()) {
+  if(!mtl_path.empty()) {
     parseMtlFile(mtl_path, mesh.materials);
   }
 
-  std::ifstream objInputFile(path);
+  std::ifstream objInputFile(obj_path);
   if(!objInputFile.is_open()){
     std::cerr << "Error opening file" << std::endl;
-    return
+    return mesh;
   }
   
   std::string activeMaterial; 
   std::string line; 
-  while(std::getLine(objInputFile, line)){
+  while(std::getline(objInputFile, line)){
     if(line.empty() || line[0] == '#') continue;
 
     std::istringstream ss(line);
@@ -119,7 +120,7 @@ Mesh Mesh::parseMeshFromObj(std::string obj_path, std::string mtl_path){
       face.materialName = activeMaterial;
 
       std::string token; 
-      while(ss > token) {
+      while(ss >> token) {
         int vertexIndex = std::stoi(token.substr(0, token.find('/')));
 
         if(vertexIndex > 0){
@@ -138,7 +139,7 @@ Mesh Mesh::parseMeshFromObj(std::string obj_path, std::string mtl_path){
     else if(keyword == "usemtl"){
       ss >> activeMaterial;
     }
-    else if(keyword == "mtlib") {
+    else if(keyword == "mtllib") {
       //do nothing 
     }
   }

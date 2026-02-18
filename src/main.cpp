@@ -5,37 +5,37 @@
 #include "transformation.h"
 #include <vector>
 // Create a cube mesh
-Mesh createCube() {
-  Mesh cube;
-  
-  // 8 vertices of a cube
-  cube.vertices = {
-    {-1, -1, -1}, // 0
-    { 1, -1, -1}, // 1
-    { 1,  1, -1}, // 2
-    {-1,  1, -1}, // 3
-    {-1, -1,  1}, // 4
-    { 1, -1,  1}, // 5
-    { 1,  1,  1}, // 6
-    {-1,  1,  1}  // 7
-  };
-  
-  // 6 faces (each is a quad)
-  cube.faces = {
-    {0, 1, 2, 3}, // Front
-    {1, 5, 6, 2}, // Right
-    {5, 4, 7, 6}, // Back
-    {4, 0, 3, 7}, // Left
-    {3, 2, 6, 7}, // Top
-    {4, 5, 1, 0}  // Bottom
-  };
-  
-  return cube;
-}
+// Mesh createCube() {
+//   Mesh cube;
+//
+//   // 8 vertices of a cube
+//   cube.vertices = {
+//     {-1, -1, -1}, // 0
+//     { 1, -1, -1}, // 1
+//     { 1,  1, -1}, // 2
+//     {-1,  1, -1}, // 3
+//     {-1, -1,  1}, // 4
+//     { 1, -1,  1}, // 5
+//     { 1,  1,  1}, // 6
+//     {-1,  1,  1}  // 7
+//   };
+//
+//   // 6 faces (each is a quad)
+//   cube.faces = {
+//     {0, 1, 2, 3}, // Front
+//     {1, 5, 6, 2}, // Right
+//     {5, 4, 7, 6}, // Back
+//     {4, 0, 3, 7}, // Left
+//     {3, 2, 6, 7}, // Top
+//     {4, 5, 1, 0}  // Bottom
+//   };
+//
+//   return cube;
+// }
 
 int main() {
-  const int WINDOW_WIDTH = 800;
-  const int WINDOW_HEIGHT = 600;
+  const int WINDOW_WIDTH = 1500;
+  const int WINDOW_HEIGHT = 1000;
   
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     std::cout << "SDL Init Error: " << SDL_GetError() << std::endl;
@@ -76,12 +76,13 @@ int main() {
   
   // Create our custom renderer and cube
   Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT);
-  Mesh cube = createCube();
+  //Mesh cube = createCube();
   
+  Mesh spinningTop = Mesh::parseMeshFromObj("assets/book.obj", "assets/book.mtl"); 
   // Animation variables
   float rotationX = 0.0f;
   float rotationY = 0.0f;
-  
+  float rotationZ = 0.0f;
   bool running = true;
   SDL_Event event;
   
@@ -97,20 +98,21 @@ int main() {
     }
     
     // Update rotation
-    rotationX += 0.01f;
-    rotationY += 0.015f;
+    rotationX += 0.0f;
+    rotationY += 0.0f;
+    rotationZ += 0.01;
     
     // Set up transform
     Transform transform;
     transform.rotX = rotationX;
     transform.rotY = rotationY;
-    transform.rotZ = 0.0f;
+    transform.rotZ = rotationZ;
     transform.x = 0.0f;
     transform.y = 0.0f;
-    transform.z = 5.0f;  // Move cube away from camera
+    transform.z = 30.0f;  // Move cube away from camera
     
     // Render the cube
-    renderer.renderMeshWithTransform(cube, transform);
+    renderer.renderMeshWithTransform(spinningTop, transform);
     
     // Copy our color buffer to SDL texture
     SDL_UpdateTexture(texture, nullptr, renderer.colorBuffer.data(), WINDOW_WIDTH * sizeof(uint32_t));
