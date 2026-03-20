@@ -43,7 +43,7 @@ int main() {
   }
   
   SDL_Window* window = SDL_CreateWindow(
-    "3D Rotating Cube",
+    "Rotating Shape",
     SDL_WINDOWPOS_CENTERED,
     SDL_WINDOWPOS_CENTERED,
     WINDOW_WIDTH,
@@ -78,11 +78,11 @@ int main() {
   Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT);
   //Mesh cube = createCube();
   
-  Mesh spinningTop = Mesh::parseMeshFromObj("assets/book.obj", "assets/book.mtl"); 
+  Mesh spinningTop = Mesh::parseMeshFromObj("../assets/spinningTop.obj", "../assets/spinningTop.mtl"); 
   // Animation variables
-  float rotationX = 0.0f;
-  float rotationY = 0.0f;
-  float rotationZ = 0.0f;
+  float rotationX = 0.005f;
+  float rotationY = 0.01f;
+  float rotationZ = 0.003f;
   bool running = true;
   SDL_Event event;
   
@@ -109,7 +109,7 @@ int main() {
     transform.rotZ = rotationZ;
     transform.x = 0.0f;
     transform.y = 0.0f;
-    transform.z = 30.0f;  // Move cube away from camera
+    transform.z = 50.0f;  // Move cube away from camera
     
     // Render the cube
     renderer.renderMeshWithTransform(spinningTop, transform);
