@@ -210,6 +210,6 @@ bool Renderer::shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, cons
 }
 
 void Renderer::clear() {  
-  std::fill(colorBuffer.begin(), colorBuffer.end(), 0xFF000000);
+  std::fill(colorBuffer.begin(), colorBuffer.end(), 0xFFFFFFF);
   std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::infinity());
 }
