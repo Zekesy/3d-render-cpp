@@ -64,36 +64,6 @@ int main() {
   bool show_demo_window = true;
   bool show_another_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-  // const int WINDOW_WIDTH = 1500;
-  // const int WINDOW_HEIGHT = 1000;
-  //
-  // if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-  //   std::cout << "SDL Init Error: " << SDL_GetError() << std::endl;
-  //   return 1;
-  // }
-  //
-  // SDL_Window* window = SDL_CreateWindow(
-  //   "Rotating Shape",
-  //   SDL_WINDOWPOS_CENTERED,
-  //   SDL_WINDOWPOS_CENTERED,
-  //   WINDOW_WIDTH,
-  //   WINDOW_HEIGHT,
-  //   0
-  // );
-  //
-  // if (!window) {
-  //   std::cout << "Window creation error: " << SDL_GetError() << std::endl;
-  //   SDL_Quit();
-  //   return 1;
-  // }
-  //
-  // SDL_Renderer* sdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-  // if (!sdlRenderer) {
-  //   std::cout << "Renderer creation error: " << SDL_GetError() << std::endl;
-  //   SDL_DestroyWindow(window);
-  //   SDL_Quit();
-  //   return 1;
-  // }
   
   // Create texture for our framebuffer
   SDL_Texture* texture = SDL_CreateTexture(
@@ -106,9 +76,12 @@ int main() {
   
   // Create our custom renderer and cube
   Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT);
-  //Mesh cube = createCube();
-  
-  Mesh spinningTop = Mesh::parseMeshFromObj("../assets/spinningTop.obj", "../assets/spinningTop.mtl"); 
+ 
+
+  static char model_path[256] = "../assets/book.obj";
+  static char inputPath[256] = ""; 
+
+  Mesh model = Mesh::parseMeshFromObj(model_path); 
   // Animation variables
   float rotationX = 0.005f;
   float rotationY = 0.01f;
@@ -117,6 +90,7 @@ int main() {
   float rotXStep, rotYStep, rotZStep = 0.0f; 
   float transformZ = 50.0f; 
   bool running = true;
+
   while (running) {
     // Handle events  
     SDL_Event event;
@@ -150,7 +124,7 @@ int main() {
     transform.z = transformZ;  // Move cube away from camera
     
     // Render the cube
-    renderer.renderMeshWithTransform(spinningTop, transform);
+    renderer.renderMeshWithTransform(model, transform);
     
     // Copy our color buffer to SDL texture
     SDL_UpdateTexture(texture, nullptr, renderer.colorBuffer.data(), WINDOW_WIDTH * sizeof(uint32_t));
@@ -170,9 +144,28 @@ int main() {
     ImGui::Begin("Settings");                          // Create a window called "Hello, world!" and append into it.
 
     ImGui::Text("Settings");               // Display some text (you can use a format strings too)
+    if(ImGui::InputText("Path to model (.obj)", inputPath, IM_ARRAYSIZE(inputPath), ImGuiInputTextFlags_EnterReturnsTrue)) {
+      std::cout << inputPath << std::endl;
+    }
+    if (ImGui::Button("Load Model")) {
+      if(inputPath[0] != '\0'){
+         model = Mesh::parseMeshFromObj(inputPath);
+      } else {
+        ImGui::OpenPopup("Error Alert");
+      }        
+    }
+    if (ImGui::BeginPopupModal("Error Alert", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Model Path is empty!");
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0))) { 
+            ImGui::CloseCurrentPopup(); 
+        }
+        ImGui::EndPopup();
+    }
     ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
     ImGui::Checkbox("Another Window", &show_another_window);
-
+    
     ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
     ImGui::SliderFloat("Rotation X", &rotXStep, 0.0f, 1.0f); //rotation x 
     ImGui::SliderFloat("Rotation Y", &rotYStep, 0.0f, 1.0f); //rotation y 

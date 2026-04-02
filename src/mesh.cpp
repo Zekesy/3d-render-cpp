@@ -87,9 +87,11 @@ void Mesh::parseMtlFile(
 }
 
 
-Mesh Mesh::parseMeshFromObj(const std::string obj_path, const std::string mtl_path){
+Mesh Mesh::parseMeshFromObj(const std::string obj_path){
   Mesh mesh; 
-  
+  std::string mtl_path = obj_path; 
+  mtl_path.replace(mtl_path.find_last_of('.'), std::string::npos, ".mtl");
+
   if(!mtl_path.empty()) {
     parseMtlFile(mtl_path, mesh.materials);
   }

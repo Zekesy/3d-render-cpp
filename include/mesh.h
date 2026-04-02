@@ -42,7 +42,7 @@ class Mesh {
     
     std::vector<Triangle> triangulateFace(const Face& face);
     void triangulate();
-    static Mesh parseMeshFromObj(const std::string obj_path, const std::string mtl_path);
+    static Mesh parseMeshFromObj(const std::string obj_path);
   private:
     static void parseMtlFile(const std::string& mtl_path, std::map<std::string, Material>& materials);
 };
