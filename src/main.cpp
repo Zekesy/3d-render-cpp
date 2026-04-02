@@ -113,7 +113,9 @@ int main() {
   float rotationX = 0.005f;
   float rotationY = 0.01f;
   float rotationZ = 0.003f;
-  
+    
+  float rotXStep, rotYStep, rotZStep = 0.0f; 
+  float transformZ = 50.0f; 
   bool running = true;
   while (running) {
     // Handle events  
@@ -134,9 +136,9 @@ int main() {
     }
     
     // Update rotation
-    rotationX += 0.0f;
-    rotationY += 0.0f;
-    rotationZ += 0.01;
+    rotationX += rotXStep;
+    rotationY += rotYStep;
+    rotationZ += rotZStep;
     
     // Set up transform
     Transform transform;
@@ -145,7 +147,7 @@ int main() {
     transform.rotZ = rotationZ;
     transform.x = 0.0f;
     transform.y = 0.0f;
-    transform.z = 50.0f;  // Move cube away from camera
+    transform.z = transformZ;  // Move cube away from camera
     
     // Render the cube
     renderer.renderMeshWithTransform(spinningTop, transform);
@@ -165,13 +167,17 @@ int main() {
     static float f = 0.0f;
     static int counter = 0;
 
-    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+    ImGui::Begin("Settings");                          // Create a window called "Hello, world!" and append into it.
 
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+    ImGui::Text("Settings");               // Display some text (you can use a format strings too)
     ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
     ImGui::Checkbox("Another Window", &show_another_window);
 
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+    ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
+    ImGui::SliderFloat("Rotation X", &rotXStep, 0.0f, 1.0f); //rotation x 
+    ImGui::SliderFloat("Rotation Y", &rotYStep, 0.0f, 1.0f); //rotation y 
+    ImGui::SliderFloat("Rotation Z", &rotZStep, 0.0f, 1.0f); //rotation z 
+                           
     ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
     if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
