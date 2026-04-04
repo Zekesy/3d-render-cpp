@@ -16,12 +16,13 @@ struct ScreenPoint {
 class Renderer {
   public:
     int width; 
-    int height; 
+    int height;
+    bool wireframe;
     std::vector<uint32_t> colorBuffer;
     std::vector<float> depthBuffer; 
     
-    Renderer (int w, int h)
-      : width(w), height(h),
+    Renderer (int w, int h, bool wf = false)
+      : width(w), height(h), wireframe(wf),
       colorBuffer(w * h),
       depthBuffer(w * h) {}
     
@@ -32,9 +33,10 @@ class Renderer {
     std::vector<ScreenPoint> projectVertices(const Mesh& mesh, const std::vector<Vertex>& vertices, int width, int height);
     void rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoint>& screenVertices);
     void rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2);
+    void rasterizeTriangleEdges(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2);
     bool barycentricCoordinates(int px, int py, const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2, float& w0, float& w1, float& w2);
     bool shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2);
-    
+    void drawLine(const ScreenPoint& p0, const ScreenPoint& p1);
   private:
     uint32_t materialToColor(const Material& mat){
       uint8_t r = static_cast<uint8_t>(mat.r * 255.0f);

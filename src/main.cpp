@@ -61,10 +61,9 @@ int main() {
   ImGui_ImplSDLRenderer2_Init(sdlRenderer);
 
   // Our state 
-  bool show_demo_window = true;
-  bool show_another_window = false;
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-  
+  bool show_wire_frame = false; 
+
   // Create texture for our framebuffer
   SDL_Texture* texture = SDL_CreateTexture(
     sdlRenderer,
@@ -75,10 +74,10 @@ int main() {
   );
   
   // Create our custom renderer and cube
-  Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT);
+  Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT, show_wire_frame);
  
 
-  static char model_path[256] = "../assets/book.obj";
+  static char model_path[256] = "../assets/spinningTop.obj";
   static char inputPath[256] = ""; 
 
   Mesh model = Mesh::parseMeshFromObj(model_path); 
@@ -124,6 +123,7 @@ int main() {
     transform.z = transformZ;  // Move cube away from camera
     
     // Render the cube
+    renderer.wireframe = show_wire_frame;
     renderer.renderMeshWithTransform(model, transform);
     
     // Copy our color buffer to SDL texture
@@ -163,9 +163,9 @@ int main() {
         }
         ImGui::EndPopup();
     }
-    ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("Another Window", &show_another_window);
     
+    ImGui::Checkbox("Show Wireframe", &show_wire_frame);
+
     ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
     ImGui::SliderFloat("Rotation X", &rotXStep, 0.0f, 1.0f); //rotation x 
     ImGui::SliderFloat("Rotation Y", &rotYStep, 0.0f, 1.0f); //rotation y 

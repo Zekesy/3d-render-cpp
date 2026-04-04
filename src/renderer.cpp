@@ -149,7 +149,11 @@ void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoin
     ScreenPoint cp1 = p1; cp1.color = triColor;
     ScreenPoint cp2 = p2; cp2.color = triColor;
     
-    rasterizeTriangle(cp0, cp1, cp2);
+    if (wireframe) {
+      rasterizeTriangleEdges(cp0, cp1, cp2);
+    } else {
+      rasterizeTriangle(cp0, cp1, cp2);
+    }
   }
 }
 
@@ -174,6 +178,54 @@ void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, c
     }
   }
 }
+
+void Renderer::rasterizeTriangleEdges(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){
+  drawLine(p0, p1);
+  drawLine(p1, p2);
+  drawLine(p2, p0);
+
+}
+
+void Renderer::drawLine(const ScreenPoint& p0, const ScreenPoint& p1){
+  float dx = p1.x - p0.x;
+  float dy = p1.y - p0.y;
+  float dz = p1.depth - p0.depth;
+  
+  float step = 0.0;
+  if(std::abs(dx) > std::abs(dy)){
+    step = std::abs(dx);
+  } else {
+    step = std::abs(dy);
+  }
+  
+  if (step == 0.0f) return;
+  //Find slope and stepping direction 
+  dx /= step; 
+  dy /= step; 
+  dz /= step;
+
+  float x = p0.x;
+  float y = p0.y;
+  float z = p0.depth;
+
+  for(int i = 0; i <= (int)step; i++){
+    int ix = (int)(x + 0.5f);
+    int iy = (int)(y + 0.5f);
+    
+   if (ix >= 0 && ix < width && iy >= 0 && iy < height) {  // bounds check
+      int bufferIndex = iy * width + ix;
+      if (z < depthBuffer[bufferIndex]) {         
+        depthBuffer[bufferIndex] = z;
+        colorBuffer[bufferIndex] = 0xFF00FF00;        
+      }
+    }
+    
+    x += dx;
+    y += dy;
+    z += dz;  
+  }
+}
+
 
 bool Renderer::barycentricCoordinates(
     int px, int py, 
