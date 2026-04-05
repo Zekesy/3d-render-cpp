@@ -77,10 +77,15 @@ int main() {
   Renderer renderer(WINDOW_WIDTH, WINDOW_HEIGHT, show_wire_frame);
  
 
-  static char model_path[256] = "../assets/spinningTop.obj";
+  static char model_path[256] = "../assets/models/spinningTop.obj";
   static char inputPath[256] = ""; 
 
   Mesh model = Mesh::parseMeshFromObj(model_path); 
+  
+  //Model dropdown 
+  const char* items[] = {"Spinning Top", "Saxophone", "Game Controller"};
+  static int selected_item = 0;
+
   // Animation variables
   float rotationX = 0.005f;
   float rotationY = 0.01f;
@@ -88,6 +93,8 @@ int main() {
     
   float rotXStep, rotYStep, rotZStep = 0.0f; 
   float transformZ = 50.0f; 
+  
+
   bool running = true;
 
   while (running) {
@@ -141,9 +148,8 @@ int main() {
     static float f = 0.0f;
     static int counter = 0;
 
-    ImGui::Begin("Settings");                          // Create a window called "Hello, world!" and append into it.
-
-    ImGui::Text("Settings");               // Display some text (you can use a format strings too)
+    ImGui::Begin("Settings");                         
+    ImGui::Text("Settings");              
     if(ImGui::InputText("Path to model (.obj)", inputPath, IM_ARRAYSIZE(inputPath), ImGuiInputTextFlags_EnterReturnsTrue)) {
       std::cout << inputPath << std::endl;
     }
@@ -163,7 +169,22 @@ int main() {
         }
         ImGui::EndPopup();
     }
-    
+
+    if(ImGui::Combo("Select model", &selected_item, items, IM_ARRAYSIZE(items))){
+      switch (selected_item) {
+        case 0:
+          model = Mesh::parseMeshFromObj("../assets/spinningTop.obj");
+          break; 
+        case 1: 
+          model = Mesh::parseMeshFromObj("../assets/models/sax.obj");
+          break; 
+        case 22:
+          model = Mesh::parseMeshFromObj("../assets/models/game.obj");
+          break;
+      }
+    }
+
+
     ImGui::Checkbox("Show Wireframe", &show_wire_frame);
 
     ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
