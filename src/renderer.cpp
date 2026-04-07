@@ -8,13 +8,13 @@
 // Helper functions for lighting
 static float calculateLighting(const Vertex& v0, const Vertex& v1, const Vertex& v2) {
   // Calculate two edges of the triangle
-  float edge1x = v1.x - v0.x;
-  float edge1y = v1.y - v0.y;
-  float edge1z = v1.z - v0.z;
+  float edge1x = v1.v.data[0] - v0.v.data[0];
+  float edge1y = v1.v.data[1] - v0.v.data[1];
+  float edge1z = v1.v.data[2] - v0.v.data[2];
   
-  float edge2x = v2.x - v0.x;
-  float edge2y = v2.y - v0.y;
-  float edge2z = v2.z - v0.z;
+  float edge2x = v2.v.data[0] - v0.v.data[0];
+  float edge2y = v2.v.data[1] - v0.v.data[1];
+  float edge2z = v2.v.data[2] - v0.v.data[2];
   
   // Calculate normal via cross product
   float nx = edge1y * edge2z - edge1z * edge2y;
@@ -74,14 +74,16 @@ std::vector<Vertex> Renderer::transformation(
   std::vector<Vertex> result;
   result.reserve(vertices.size());
 
-  for(auto v : vertices){
-      v = rotateX(v, transform.rotX);
-      v = rotateY(v, transform.rotY);
-      v = rotateZ(v, transform.rotZ);
+  for(const auto& vertex : vertices){
+      auto v = vertex; 
 
-      v.x += transform.x;
-      v.y += transform.y;
-      v.z += transform.z;
+      v.v = rotateX(v.v, transform.rotX);
+      v.v = rotateY(v.v, transform.rotY);
+      v.v = rotateZ(v.v, transform.rotZ);
+
+      v.v.data[0] += transform.x;
+      v.v.data[1] += transform.y;
+      v.v.data[2] += transform.z;
 
       result.push_back(v);  
   }
@@ -91,10 +93,10 @@ std::vector<Vertex> Renderer::transformation(
 
 ScreenPoint Renderer::project(const Vertex& vertex, int width, int height, uint32_t color){
   const float fov = 1.0f;  
-  const float z = std::max(vertex.z, 0.1f);
+  const float z = std::max(vertex.v.data[2], 0.1f);
   
-  const float x = (vertex.x / z) * fov;
-  const float y = (vertex.y / z) * fov;
+  const float x = (vertex.v.data[0] / z) * fov;
+  const float y = (vertex.v.data[1] / z) * fov;
 
   const float screenX = (x + 1.0f) * 0.5f * width;
   const float screenY = (1.0f - y) * 0.5f * height;

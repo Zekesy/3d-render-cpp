@@ -1,5 +1,5 @@
 #pragma once 
-#include "mesh.h"
+#include "Vec3.h"
 
 struct Transform {
   float x = 0.0f; 
@@ -10,6 +10,6 @@ struct Transform {
   float rotZ = 0.0f;
 };
 
-Vertex rotateX(const Vertex& v, float angle);
-Vertex rotateY(const Vertex& v, float angle);
-Vertex rotateZ(const Vertex& v, float angle);
+Vec3 rotateX(const Vec3& v, float angle);
+Vec3 rotateY(const Vec3& v, float angle);
+Vec3 rotateZ(const Vec3& v, float angle);

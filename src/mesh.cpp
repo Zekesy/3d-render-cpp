@@ -91,8 +91,9 @@ Mesh Mesh::parseMeshFromObj(const std::string obj_path){
   Mesh mesh; 
   std::string mtl_path = obj_path; 
   mtl_path.replace(mtl_path.find_last_of('.'), std::string::npos, ".mtl");
-
-  if(!mtl_path.empty()) {
+  
+  std::ifstream test(mtl_path);
+  if(test.is_open()){
     parseMtlFile(mtl_path, mesh.materials);
   }
 
@@ -112,8 +113,10 @@ Mesh Mesh::parseMeshFromObj(const std::string obj_path){
 
     ss >> keyword; 
     if(keyword == "v"){
-      Vertex v; 
-      ss >> v.x >> v.y >> v.z;
+      Vertex v;
+      float x, y, z;
+      ss >> x >> y >> z;
+      v.v = Vec3(x,y,z);
       mesh.vertices.push_back(v);
     }
 

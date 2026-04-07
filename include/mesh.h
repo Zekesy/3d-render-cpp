@@ -2,11 +2,14 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "Vec3.h"
 
 struct Vertex {
-  float x; 
-  float y;
-  float z;
+  // float x; 
+  // float y;
+  // float z;
+  Vec3 v; 
+  //std::vector<std::vector<float>> quadMatrix (4,4);
 };
 
 struct Triangle {
@@ -14,6 +17,7 @@ struct Triangle {
   int v2_index;
   int v3_index;
   std::string materialName;
+
 };
 
 struct Material {
@@ -25,11 +29,6 @@ struct Face {
   std::vector<int> vertices; 
   std:: string materialName;
 };
-
-
-//TODO refactor code to use Face object in faces vector
-//TODO Update the mesh.h file to handle the new parsign obj Functions
-//TODO Try spinningTop rendering with new functions 
 
 class Mesh {
    //vertices 

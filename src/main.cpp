@@ -91,7 +91,9 @@ int main() {
   float rotationY = 0.01f;
   float rotationZ = 0.003f;
     
-  float rotXStep, rotYStep, rotZStep = 0.0f; 
+  float rotXStep = 0.0f;
+  float rotYStep = 0.0f;
+  float rotZStep = 0.0f;
   float transformZ = 50.0f; 
   
 
@@ -173,12 +175,12 @@ int main() {
     if(ImGui::Combo("Select model", &selected_item, items, IM_ARRAYSIZE(items))){
       switch (selected_item) {
         case 0:
-          model = Mesh::parseMeshFromObj("../assets/spinningTop.obj");
+          model = Mesh::parseMeshFromObj("../assets/models/spinningTop.obj");
           break; 
         case 1: 
           model = Mesh::parseMeshFromObj("../assets/models/sax.obj");
           break; 
-        case 22:
+        case 2:
           model = Mesh::parseMeshFromObj("../assets/models/game.obj");
           break;
       }
