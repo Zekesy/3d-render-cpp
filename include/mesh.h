@@ -3,13 +3,11 @@
 #include <string>
 #include <map>
 #include "Vec3.h"
+#include "Quadric.h"
 
 struct Vertex {
-  // float x; 
-  // float y;
-  // float z;
   Vec3 v; 
-  //std::vector<std::vector<float>> quadMatrix (4,4);
+  Quadric q; 
 };
 
 struct Triangle {

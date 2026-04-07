@@ -77,9 +77,9 @@ std::vector<Vertex> Renderer::transformation(
   for(const auto& vertex : vertices){
       auto v = vertex; 
 
-      v.v = rotateX(v.v, transform.rotX);
-      v.v = rotateY(v.v, transform.rotY);
-      v.v = rotateZ(v.v, transform.rotZ);
+      v.v = Transform::rotateX(v.v, transform.rotX);
+      v.v = Transform::rotateY(v.v, transform.rotY);
+      v.v = Transform::rotateZ(v.v, transform.rotZ);
 
       v.v.data[0] += transform.x;
       v.v.data[1] += transform.y;

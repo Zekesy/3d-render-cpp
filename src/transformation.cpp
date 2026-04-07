@@ -2,7 +2,7 @@
 #include <vector>
 #include <cmath>
 
-Vec3 rotateX(const Vec3& v, float angle){
+Vec3 Transform::rotateX(const Vec3& v, float angle){
   const auto c = std::cos(angle);
   const auto s = std::sin(angle);
 
@@ -13,7 +13,7 @@ Vec3 rotateX(const Vec3& v, float angle){
     );
 }
 
-Vec3 rotateY(const Vec3& v, float angle){
+Vec3 Transform::rotateY(const Vec3& v, float angle){
   const auto c = std::cos(angle);
   const auto s = std::sin(angle);
 
@@ -24,7 +24,7 @@ Vec3 rotateY(const Vec3& v, float angle){
   };
 }
 
-Vec3 rotateZ(const Vec3& v, float angle){
+Vec3 Transform::rotateZ(const Vec3& v, float angle){
   const auto c = std::cos(angle);
   const auto s = std::sin(angle);
 

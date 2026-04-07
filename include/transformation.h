@@ -8,8 +8,9 @@ struct Transform {
   float rotX = 0.0f; 
   float rotY = 0.0f; 
   float rotZ = 0.0f;
+
+  static Vec3 rotateX(const Vec3& v, float angle);
+  static Vec3 rotateY(const Vec3& v, float angle);
+  static Vec3 rotateZ(const Vec3& v, float angle);
 };
 
-Vec3 rotateX(const Vec3& v, float angle);
-Vec3 rotateY(const Vec3& v, float angle);
-Vec3 rotateZ(const Vec3& v, float angle);

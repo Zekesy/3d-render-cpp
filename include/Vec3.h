@@ -14,6 +14,8 @@ public:
   float length() const; 
   float magnitude() const; 
  
-  Vec3 dotProduct(const Vec3& a, const Vec3& b); 
-  Vec3 crossProduct(const Vec3& other);
+  Vec3 dot(const Vec3& a, const Vec3& b); 
+  Vec3 cross(const Vec3& other);
+
+  Vec3 operator-(const Vec3& other) const;
 };
