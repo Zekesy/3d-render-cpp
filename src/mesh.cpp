@@ -169,6 +169,17 @@ Mesh Mesh::parseMeshFromObj(const std::string obj_path){
   return mesh; 
 }
 
+void Mesh::reloadMesh(){
+   for(auto& tri : triangulatedFaces){
+     tri.valid = true;
+
+     vertices[tri.v0].valid = true; 
+     vertices[tri.v1].valid = true; 
+     vertices[tri.v2].valid = true; 
+   }
+
+}
+
 // ----------------- Connectivity --------------------------------
 void Mesh::buildConnectivity() {
    for(auto& v: vertices){

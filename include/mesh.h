@@ -33,7 +33,7 @@ class Mesh {
     std::vector<Triangle> triangulateFace(const Face& face);
     void triangulate();
     static Mesh parseMeshFromObj(const std::string obj_path);
-
+    void reloadMesh();
 
     void applyQEM(int target_count); 
     void buildConnectivity();

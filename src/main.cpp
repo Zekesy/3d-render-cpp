@@ -155,12 +155,17 @@ int main() {
     if(ImGui::InputText("Path to model (.obj)", inputPath, IM_ARRAYSIZE(inputPath), ImGuiInputTextFlags_EnterReturnsTrue)) {
       std::cout << inputPath << std::endl;
     }
+
     if (ImGui::Button("Load Model")) {
       if(inputPath[0] != '\0'){
          model = Mesh::parseMeshFromObj(inputPath);
       } else {
         ImGui::OpenPopup("Error Alert");
       }        
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reload Model")) {
+         model.reloadMesh(); 
     }
     if (ImGui::BeginPopupModal("Error Alert", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Model Path is empty!");
@@ -171,6 +176,8 @@ int main() {
         }
         ImGui::EndPopup();
     }
+
+    ImGui::Spacing();
 
     if(ImGui::Combo("Select model", &selected_item, items, IM_ARRAYSIZE(items))){
       switch (selected_item) {
@@ -186,16 +193,16 @@ int main() {
       }
     }
 
-
     ImGui::Checkbox("Show Wireframe", &show_wire_frame);
+    
+    ImGui::Spacing();
 
     ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
     ImGui::SliderFloat("Rotation X", &rotXStep, 0.0f, 1.0f); //rotation x 
     ImGui::SliderFloat("Rotation Y", &rotYStep, 0.0f, 1.0f); //rotation y 
     ImGui::SliderFloat("Rotation Z", &rotZStep, 0.0f, 1.0f); //rotation z 
                            
-    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
+    ImGui::Spacing();
     if (ImGui::Button("Reduce triangles")){
       triangleCount = 0; // Buttons return true when clicked (most widgets return true when edited/activated)
       std::cout << triangleCount << std::endl;
