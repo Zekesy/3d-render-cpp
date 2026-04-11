@@ -58,7 +58,7 @@ static uint32_t applyLighting(uint32_t color, float intensity) {
 }
 
 void Renderer::renderMeshWithTransform(Mesh& mesh, const Transform& transform){
-  mesh.triangulate();
+  //mesh.triangulate();
   
   std::vector<Vertex> transformedVertices = transformation(mesh.vertices, transform);
   std::vector<ScreenPoint> screenVertices = projectVertices(mesh, transformedVertices, width, height);
@@ -121,9 +121,14 @@ std::vector<ScreenPoint> Renderer::projectVertices(
 
 void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoint>& screenVertices){
   for(const auto& tri : mesh.triangulatedFaces) {
-    const ScreenPoint& p0 = screenVertices[tri.v1_index];
-    const ScreenPoint& p1 = screenVertices[tri.v2_index];
-    const ScreenPoint& p2 = screenVertices[tri.v3_index];
+    if(!tri.valid) continue;
+    if(!mesh.vertices[tri.v0].valid ||
+       !mesh.vertices[tri.v1].valid ||
+       !mesh.vertices[tri.v2].valid)
+        continue;
+    const ScreenPoint& p0 = screenVertices[tri.v0];
+    const ScreenPoint& p1 = screenVertices[tri.v1];
+    const ScreenPoint& p2 = screenVertices[tri.v2];
     
     if(shouldCullFace(p0, p1, p2)) {
       continue; 
@@ -139,9 +144,9 @@ void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoin
     }
     
     // Calculate lighting based on 3D vertex positions
-    const Vertex& v0 = mesh.vertices[tri.v1_index];
-    const Vertex& v1 = mesh.vertices[tri.v2_index];
-    const Vertex& v2 = mesh.vertices[tri.v3_index];
+    const Vertex& v0 = mesh.vertices[tri.v0];
+    const Vertex& v1 = mesh.vertices[tri.v1];
+    const Vertex& v2 = mesh.vertices[tri.v2];
     float lighting = calculateLighting(v0, v1, v2);
     
     // Apply lighting to color
@@ -182,10 +187,10 @@ void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, c
 }
 
 void Renderer::rasterizeTriangleEdges(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){
+
   drawLine(p0, p1);
   drawLine(p1, p2);
   drawLine(p2, p0);
-
 }
 
 void Renderer::drawLine(const ScreenPoint& p0, const ScreenPoint& p1){
