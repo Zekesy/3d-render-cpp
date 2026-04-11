@@ -193,6 +193,40 @@ void Mesh::buildConnectivity() {
     }
 }
 
+void Mesh::updateConnectivityLocal(int v1, int v2){
+  std::set<int> toUpdate; 
+  toUpdate.insert(v1);
+
+  for(int v : vertices[v1].connectedVertices) {
+    toUpdate.insert(v);
+  }
+
+  for(int v : toUpdate){
+    vertices[v].connectedVertices.clear();
+    vertices[v].connectedFaces.clear();
+  }
+
+  for(int i = 0; i < (int)triangulatedFaces.size(); i++) {
+    auto& t = triangulatedFaces[i];
+    if(!t.valid) continue;
+
+    // Only process triangles touching our updated vertices
+    bool touches = (toUpdate.count(t.v0) || toUpdate.count(t.v1) || toUpdate.count(t.v2));
+    if(!touches) continue;
+
+    auto update = [&](int a, int b, int c) {
+        if(toUpdate.count(a)) {
+            vertices[a].connectedVertices.insert(b);
+            vertices[a].connectedVertices.insert(c);
+            vertices[a].connectedFaces.insert(i);
+        }
+    };
+    update(t.v0, t.v1, t.v2);
+    update(t.v1, t.v0, t.v2);
+    update(t.v2, t.v0, t.v1);
+}
+}
+
 std::set<int> Mesh::getConnectedVertices(int v) {
     return vertices[v].connectedVertices;
 }
@@ -366,31 +400,30 @@ void Mesh::applyQEM(int target_count) {
   }
 
   std::cout << "Calculated Quadric triangles" << std::endl;
-  //compute edge error for unique edges 
-  std::set<std::pair<int,int>> edgeSet; 
-  
-  //find unique edges 
-  // for(auto& edge : model.edges){
-  //   int a = std::min(edge.v1, edge.v2);
-  //   int b = std::max(edge.v1, edge.v2);
-  //   edgeSet.insert({a,b});
-  // }
-
+   // Deduplicated edge set
+  std::set<std::pair<int,int>> seen;
   std::priority_queue<Edge, std::vector<Edge>, EdgeCompare> pq;
 
   for(auto& edge: edges) {
-      // int a = std::min(edge.v1, edge.v2);
-      // int b = std::max(edge.v1, edge.v2);
-      //
-      // if(edgeSet.find({a,b}) != edgeSet.end()) {
+    if(edge.v1 < 0 || edge.v1 >= (int)vertices.size()) continue;
+    if(edge.v2 < 0 || edge.v2 >= (int)vertices.size()) continue;
+    if(!vertices[edge.v1].valid || !vertices[edge.v2].valid) continue;
+
+    int a = std::min(edge.v1, edge.v2);
+    int b = std::max(edge.v1, edge.v2);
+    if(!seen.insert({a, b}).second) continue;
+    
     computeEdgeCost(edge); 
     pq.push(edge);                         
-      // }
   }
   
   std::cout << "Computed edge costs and made pq" << std::endl;
 
-  int validCount = triangulatedFaces.size();
+  int validCount = 0;
+  for(const auto& t : triangulatedFaces){
+    if(t.valid) validCount++;
+  }  
+  std::cout << "Starting Triangles: " << validCount << std::endl;       
   while(!pq.empty() && validCount > target_count){
     Edge edge = pq.top();
     pq.pop();
@@ -399,10 +432,16 @@ void Mesh::applyQEM(int target_count) {
     if(hasMoreThanTwoNeighbors(edge.v1, edge.v2)) continue;
     if(isBoundaryEdge(edge.v1, edge.v2)) continue;
     if(!triangleFlipCheck(edge.v1, edge.v2, edge.collapsePosition)) continue;
-
+    
+    int removed = 0;
+    for(int fi : vertices[edge.v1].connectedFaces) {
+        auto& t = triangulatedFaces[fi];
+        if(t.valid && (t.v0 == edge.v2 || t.v1 == edge.v2 || t.v2 == edge.v2))
+            removed++;
+    }
     //collapse edge 
     collapseEdge(edge);
-    buildConnectivity(); 
+    updateConnectivityLocal(edge.v1,edge.v2); 
     
     auto& neighbors = vertices[edge.v1].connectedVertices;
     for(int v : neighbors){
@@ -410,10 +449,8 @@ void Mesh::applyQEM(int target_count) {
         computeEdgeCost(newEdge);
         pq.push(newEdge);
     }
-    validCount = 0;
-    for(const auto& t : triangulatedFaces){
-        if(t.valid) validCount++;
-    }
+    validCount -= removed;
+
     std::cout << "Invalid Triangles: " << validCount << std::endl;
   }
 }

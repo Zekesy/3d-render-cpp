@@ -37,6 +37,7 @@ class Mesh {
 
     void applyQEM(int target_count); 
     void buildConnectivity();
+    void updateConnectivityLocal(int v1, int v2);
     void computeVertexQuadrics();
     void computeEdgeCosts();
     void collapseEdge(Edge& edge);

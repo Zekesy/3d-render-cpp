@@ -172,7 +172,9 @@ void Renderer::rasterizeTriangle(const ScreenPoint& p0, const ScreenPoint& p1, c
 
   for(int y = minY; y <= maxY; y++){
     for(int x = minX; x <= maxX; x++){  
-      float w0, w1, w2; 
+      float w0, w1, w2;
+      
+
       if(barycentricCoordinates(x, y, p0, p1, p2, w0, w1, w2)){
         float depth = w0 * p0.depth + w1 * p1.depth + w2 * p2.depth;
 

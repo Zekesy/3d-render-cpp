@@ -97,6 +97,7 @@ int main() {
   float transformZ = 50.0f; 
   
 
+  int triangleCount = model.triangulatedFaces.size();
   bool running = true;
 
   while (running) {
@@ -148,7 +149,6 @@ int main() {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     static float f = 0.0f;
-    static int counter = 0;
 
     ImGui::Begin("Settings");                         
     ImGui::Text("Settings");              
@@ -196,18 +196,22 @@ int main() {
                            
     ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-    if (ImGui::Button("Reduce triangles")){                            // Buttons return true when clicked (most widgets return true when edited/activated)
-      std::cout << model.triangulatedFaces.size() << std::endl;
-      model.applyQEM(model.triangulatedFaces.size() - 200);
-      std::cout << model.triangulatedFaces.size() << std::endl;
+    if (ImGui::Button("Reduce triangles")){
+      triangleCount = 0; // Buttons return true when clicked (most widgets return true when edited/activated)
+      std::cout << triangleCount << std::endl;
+      for(auto& tri : model.triangulatedFaces) {
+        if(!tri.valid) continue; 
+        triangleCount++;
+      }
+      model.applyQEM(triangleCount - 100);
     }
     ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
+    ImGui::Text("NO. Triangles in Mesh = %d", triangleCount);
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     ImGui::End();
 
-    ImGui::Render();
+    ImGui::Render(); 
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
 
     SDL_RenderPresent(sdlRenderer);
