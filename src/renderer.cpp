@@ -101,7 +101,9 @@ ScreenPoint Renderer::project(const Vertex& vertex, int width, int height, uint3
   const float screenX = (x + 1.0f) * 0.5f * width;
   const float screenY = (1.0f - y) * 0.5f * height;
   
-  return {screenX, screenY, z, color};
+  float actualZ = vertex.v.data[2];
+
+  return {screenX, screenY, actualZ, color};
 }
 
 std::vector<ScreenPoint> Renderer::projectVertices( 
@@ -130,6 +132,14 @@ void Renderer::rasterizeTriangles(const Mesh& mesh, const std::vector<ScreenPoin
     const ScreenPoint& p1 = screenVertices[tri.v1];
     const ScreenPoint& p2 = screenVertices[tri.v2];
     
+    //Frustrum Screen cull 
+    if(std::min({p0.x, p1.x, p2.x}) >= width) continue; //Leftmost triangle point is still on the right of the screen, whole triangle off the right edge 
+    if(std::max({p0.x, p1.x, p2.x}) < 0) continue; //rightmost triangle point to the left of screen 
+    if(std::min({p0.y, p1.y, p2.y}) >= height) continue; //highest point below the screen 
+    if(std::max({p0.y, p1.y, p2.y}) < 0) continue; //lowest point above screen. Origin top left (0,0) 
+
+    if(p0.depth < 0 && p1.depth < 0 && p2.depth < 0) continue; //triangle behind the screen 
+
     if(shouldCullFace(p0, p1, p2)) {
       continue; 
     }
