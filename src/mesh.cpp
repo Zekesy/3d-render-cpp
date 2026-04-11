@@ -200,7 +200,6 @@ std::set<int> Mesh::getConnectedVertices(int v) {
 
 
 Vec3 Mesh::computeNormal(const Triangle& t) {
-
     Vec3 a = vertices[t.v0].v;
     Vec3 b = vertices[t.v1].v;
     Vec3 c = vertices[t.v2].v;
@@ -209,7 +208,6 @@ Vec3 Mesh::computeNormal(const Triangle& t) {
 }
 
 bool Mesh::triangleFlipCheck(int v1, int v2, const Vec3& newPos) {
-
     std::set<int> faces;
 
     // collect all faces connected to v1 and v2
@@ -333,7 +331,6 @@ struct EdgeCompare {
 };
 
 void Mesh::computeEdgeCost(Edge& edge) {
-
     Vertex& v1 = vertices[edge.v1];
     Vertex& v2 = vertices[edge.v2];
 
@@ -403,12 +400,11 @@ void Mesh::applyQEM(int target_count) {
     if(isBoundaryEdge(edge.v1, edge.v2)) continue;
     if(!triangleFlipCheck(edge.v1, edge.v2, edge.collapsePosition)) continue;
 
-    std::cout << "Checks finished" << std::endl;
     //collapse edge 
     collapseEdge(edge);
-    auto& neighbors = vertices[edge.v1].connectedVertices;
+    buildConnectivity(); 
     
-    std::cout << "Collapsed Edge" << std::endl;
+    auto& neighbors = vertices[edge.v1].connectedVertices;
     for(int v : neighbors){
         Edge newEdge(edge.v1, v);
         computeEdgeCost(newEdge);
