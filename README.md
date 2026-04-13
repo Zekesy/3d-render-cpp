@@ -2,6 +2,8 @@
 
 A personal project focused on understanding and implementing core 3D rendering techniques from scratch in C++.
 
+![image](/3d_render/examples/screenshot.png)
+
 ## Overview
 
 This project is an exploration of how modern rendering pipelines work at a low level. Instead of relying on high-level engines, I am building key components manually to deepen my understanding of graphics programming.
