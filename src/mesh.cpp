@@ -177,7 +177,6 @@ void Mesh::reloadMesh(){
      vertices[tri.v1].valid = true; 
      vertices[tri.v2].valid = true; 
    }
-
 }
 
 // ----------------- Connectivity --------------------------------

@@ -13,6 +13,28 @@ This project is an exploration of how modern rendering pipelines work at a low l
 - Experiment with performance and low-level optimizations in C++
 - Continuously extend the renderer with new features over time
 
+## Getting Started
+
+##### Clone the Repository
+
+`git clone https://github.com/Zekesy/3d-render-cpp.git`
+
+##### Build the project
+
+  ```bash
+  cd 3d-render-cpp 
+  mkdir build 
+  cd build 
+  cmake ..
+  make 
+  ```
+
+##### Run the executable
+
+  ```bash
+  ./render3d_
+  ```
+
 ## Features
 
 - [x] Parsing .obj and .mtl files for meshes
@@ -47,4 +69,5 @@ This project is an exploration of how modern rendering pipelines work at a low l
 
 ## Resources
 
-QEM: <https://arxiv.org/pdf/2512.19959>
+QEM:
+<https://arxiv.org/pdf/2512.19959>

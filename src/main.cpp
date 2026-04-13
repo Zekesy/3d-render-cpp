@@ -165,7 +165,22 @@ int main() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Reload Model")) {
-         model.reloadMesh(); 
+         switch (selected_item) {
+        case 0:
+          model = Mesh::parseMeshFromObj("../assets/models/spinningTop.obj");
+          break; 
+        case 1: 
+          model = Mesh::parseMeshFromObj("../assets/models/sax.obj");
+          break; 
+        case 2:
+          model = Mesh::parseMeshFromObj("../assets/models/game.obj");
+          break;
+      }
+      triangleCount = 0; // Buttons return true when clicked (most widgets return true when edited/activated)
+      for(auto& tri : model.triangulatedFaces) {
+        if(!tri.valid) continue; 
+        triangleCount++;
+      }
     }
     if (ImGui::BeginPopupModal("Error Alert", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Model Path is empty!");
@@ -191,13 +206,18 @@ int main() {
           model = Mesh::parseMeshFromObj("../assets/models/game.obj");
           break;
       }
+      triangleCount = 0; // Buttons return true when clicked (most widgets return true when edited/activated)
+      for(auto& tri : model.triangulatedFaces) {
+        if(!tri.valid) continue; 
+        triangleCount++;
+      }
     }
 
     ImGui::Checkbox("Show Wireframe", &show_wire_frame);
     
     ImGui::Spacing();
 
-    ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 100.0f);  //transform z 
+    ImGui::SliderFloat("Zoom", &transformZ, 20.0f, 150.0f);  //transform z 
     ImGui::SliderFloat("Rotation X", &rotXStep, 0.0f, 1.0f); //rotation x 
     ImGui::SliderFloat("Rotation Y", &rotYStep, 0.0f, 1.0f); //rotation y 
     ImGui::SliderFloat("Rotation Z", &rotZStep, 0.0f, 1.0f); //rotation z 
