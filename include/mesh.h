@@ -38,20 +38,14 @@ class Mesh {
     void applyQEM(int target_count); 
     void buildConnectivity();
     void updateConnectivityLocal(int v1, int v2);
-    void computeVertexQuadrics();
-    void computeEdgeCosts();
     void collapseEdge(Edge& edge);
 
-    std::vector<int> getVertexNeighbors(int vertexIndex);
-    std::vector<int> getVertexFaces(int vertexIndex);
-    std::vector<int> getVertexEdges(int vertexIndex);
     std::set<int> getConnectedVertices(int v);
     
     bool isBoundaryEdge(int v1, int v2);
     Vec3 computeNormal(const Triangle& t);
     bool triangleFlipCheck(int v1, int v2, const Vec3& newPos);
     bool hasMoreThanTwoNeighbors(int v1, int v2);
-    bool isBoundaryCheck(int v1, int v2);
   private:
     static void parseMtlFile(const std::string& mtl_path, std::map<std::string, Material>& materials);
     void replaceVertex(int oldV, int newV);

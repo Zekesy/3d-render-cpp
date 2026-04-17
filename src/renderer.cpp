@@ -67,6 +67,11 @@ void Renderer::renderMeshWithTransform(Mesh& mesh, const Transform& transform){
   rasterizeTriangles(mesh, screenVertices);
 }
 
+void Renderer::clear() {  
+  std::fill(colorBuffer.begin(), colorBuffer.end(), 0xFFFFFFF);
+  std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::infinity());
+}
+
 std::vector<Vertex> Renderer::transformation(
     const std::vector<Vertex>& vertices,
     const Transform& transform) 
@@ -205,6 +210,40 @@ void Renderer::rasterizeTriangleEdges(const ScreenPoint& p0, const ScreenPoint& 
   drawLine(p2, p0);
 }
 
+bool Renderer::barycentricCoordinates(
+    int px, int py, 
+    const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2,  
+    float& w0, float& w1, float& w2) 
+{
+  float x = px + 0.5f; 
+  float y = py + 0.5f;
+  
+  auto edgeFunction = [](float ax, float ay, float bx, float by, float cx, float cy) {
+    return (cx - ax) * (by - ay) - (cy - ay) * (bx - ax);
+  };
+
+  float area = edgeFunction(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
+    
+  if(std::abs(area) < 0.001f) return false;
+  
+  w0 = edgeFunction(p1.x, p1.y, p2.x, p2.y, x, y) / area;
+  w1 = edgeFunction(p2.x, p2.y, p0.x, p0.y, x, y) / area;
+  w2 = edgeFunction(p0.x, p0.y, p1.x, p1.y, x, y) / area;
+  
+  return (w0 >= 0) && (w1 >= 0) && (w2 >= 0);
+}
+
+bool Renderer::shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  
+  const float edge1x = p1.x - p0.x;
+  const float edge1y = p1.y - p0.y;
+  const float edge2x = p2.x - p0.x;
+  const float edge2y = p2.y - p0.y;  
+  
+  const float cross = edge1x * edge2y - edge1y * edge2x;
+
+  return (cross <= 0); 
+}
+
 void Renderer::drawLine(const ScreenPoint& p0, const ScreenPoint& p1){
   float dx = p1.x - p0.x;
   float dy = p1.y - p0.y;
@@ -243,44 +282,4 @@ void Renderer::drawLine(const ScreenPoint& p0, const ScreenPoint& p1){
     y += dy;
     z += dz;  
   }
-}
-
-
-bool Renderer::barycentricCoordinates(
-    int px, int py, 
-    const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2,  
-    float& w0, float& w1, float& w2) 
-{
-  float x = px + 0.5f; 
-  float y = py + 0.5f;
-  
-  auto edgeFunction = [](float ax, float ay, float bx, float by, float cx, float cy) {
-    return (cx - ax) * (by - ay) - (cy - ay) * (bx - ax);
-  };
-
-  float area = edgeFunction(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
-    
-  if(std::abs(area) < 0.001f) return false;
-  
-  w0 = edgeFunction(p1.x, p1.y, p2.x, p2.y, x, y) / area;
-  w1 = edgeFunction(p2.x, p2.y, p0.x, p0.y, x, y) / area;
-  w2 = edgeFunction(p0.x, p0.y, p1.x, p1.y, x, y) / area;
-  
-  return (w0 >= 0) && (w1 >= 0) && (w2 >= 0);
-}
-
-bool Renderer::shouldCullFace(const ScreenPoint& p0, const ScreenPoint& p1, const ScreenPoint& p2){  
-  const float edge1x = p1.x - p0.x;
-  const float edge1y = p1.y - p0.y;
-  const float edge2x = p2.x - p0.x;
-  const float edge2y = p2.y - p0.y;  
-  
-  const float cross = edge1x * edge2y - edge1y * edge2x;
-
-  return (cross <= 0); 
-}
-
-void Renderer::clear() {  
-  std::fill(colorBuffer.begin(), colorBuffer.end(), 0xFFFFFFF);
-  std::fill(depthBuffer.begin(), depthBuffer.end(), std::numeric_limits<float>::infinity());
 }

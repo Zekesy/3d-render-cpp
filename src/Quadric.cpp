@@ -2,32 +2,27 @@
 #include "Vec3.h"
 #include "mesh.h"
 #include <cmath>
-float Quadric::computeError(const Vec3& v, const Quadric& Q)
-{
-    float x = v.data[0];
-    float y = v.data[1];
-    float z = v.data[2];
 
-    return 
-        Q.Q[0][0]*x*x +
-        Q.Q[0][1]*x*y +
-        Q.Q[0][2]*x*z +
-        Q.Q[0][3]*x +
+Quadric Quadric::quadric(const Vec3& v0, const Vec3& v1, const Vec3& v2) {
+  Vec3 e1 = v1 - v0;
+  Vec3 e2 = v2 - v0;
+  Vec3 n = e1.cross(e2).normalized();
 
-        Q.Q[1][0]*y*x +
-        Q.Q[1][1]*y*y +
-        Q.Q[1][2]*y*z +
-        Q.Q[1][3]*y +
+  float d = -1.0f * n.dot(v0);
 
-        Q.Q[2][0]*z*x +
-        Q.Q[2][1]*z*y +
-        Q.Q[2][2]*z*z +
-        Q.Q[2][3]*z +
+  Quadric q; 
 
-        Q.Q[3][0]*x +
-        Q.Q[3][1]*y +
-        Q.Q[3][2]*z +
-        Q.Q[3][3];
+  float p[4] = {n.data[0], n.data[1], n.data[2], d};
+  
+
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 4; j++){
+      q.Q[i][j] = p[i] * p[j]; 
+    }
+  }
+  
+  
+  return q; 
 }
 
 float Quadric::evaluate(const Vec3& v) const {
@@ -103,35 +98,40 @@ bool Quadric::solve(Vec3& result) const {
     return true;
 }
 
-Quadric Quadric::quadric(const Vec3& v0, const Vec3& v1, const Vec3& v2) {
-  Vec3 e1 = v1 - v0;
-  Vec3 e2 = v2 - v0;
-  Vec3 n = e1.cross(e2).normalized();
-
-  float d = -1.0f * n.dot(v0);
-
-  Quadric q; 
-
-  float p[4] = {n.data[0], n.data[1], n.data[2], d};
-  
-
-  for(int i = 0; i < 4; i++){
-    for(int j = 0; j < 4; j++){
-      q.Q[i][j] = p[i] * p[j]; 
-    }
-  }
-  
-  
-  return q; 
-}
-
-
 void Quadric::quadricTriangle(Vertex& v0, Vertex& v1,  Vertex& v2) {
   Quadric q = quadric(v0.v, v1.v, v2.v); 
   
   v0.q += q; 
   v1.q += q; 
   v2.q += q; 
+}
+
+float Quadric::computeError(const Vec3& v, const Quadric& Q)
+{
+    float x = v.data[0];
+    float y = v.data[1];
+    float z = v.data[2];
+
+    return 
+        Q.Q[0][0]*x*x +
+        Q.Q[0][1]*x*y +
+        Q.Q[0][2]*x*z +
+        Q.Q[0][3]*x +
+
+        Q.Q[1][0]*y*x +
+        Q.Q[1][1]*y*y +
+        Q.Q[1][2]*y*z +
+        Q.Q[1][3]*y +
+
+        Q.Q[2][0]*z*x +
+        Q.Q[2][1]*z*y +
+        Q.Q[2][2]*z*z +
+        Q.Q[2][3]*z +
+
+        Q.Q[3][0]*x +
+        Q.Q[3][1]*y +
+        Q.Q[3][2]*z +
+        Q.Q[3][3];
 }
 
 

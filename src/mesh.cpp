@@ -56,52 +56,6 @@ void Mesh::triangulate() {
   } 
 }
 
-
-
-void Mesh::parseMtlFile(
-    const std::string& mtl_path,
-    std::map<std::string, Material>& materials
-) {
-  std::ifstream mtlInputFile(mtl_path);
-  if(!mtlInputFile.is_open()){
-    std::cerr << "Error opening mtl file" << std::endl;
-    return;
-  }
-
-  std::string line;
-  Material current;
-  bool hasMaterial = false; 
-
-  while (std::getline(mtlInputFile, line)){
-    if( line.empty() || line[0] == '#') continue;
-
-    std::istringstream ss(line);
-    std::string keyword; 
-    ss >> keyword; 
-
-    if(keyword == "newmtl"){
-      if (hasMaterial) {
-        //save it
-        materials[current.name] = current;
-      }
-      ss >> current.name;
-      current.r = current.g = current.b = 1.0f; //default white 
-      hasMaterial = true;
-    }
-    else if (keyword == "Kd") {
-      ss >> current.r >> current.g >> current.b;
-    }
-    //can add ka ks later 
-  }
-
-  if(hasMaterial){
-    materials[current.name] = current; 
-  }
-
-  return; 
-}
-
-
 Mesh Mesh::parseMeshFromObj(const std::string obj_path){
   Mesh mesh; 
   std::string mtl_path = obj_path; 
@@ -179,6 +133,76 @@ void Mesh::reloadMesh(){
    }
 }
 
+void Mesh::applyQEM(int target_count) {
+  struct EdgeCompare {
+    bool operator()(const Edge& a, const Edge& b) const {
+      return a.error > b.error;
+    }
+  };
+
+  std::cout << "Build Connectivity" << std::endl;
+  buildConnectivity();
+  //Compute Quadric 
+  for(const auto& tri : triangulatedFaces){
+    Quadric::quadricTriangle(vertices[tri.v0], vertices[tri.v1], vertices[tri.v2]);
+  }
+
+  std::cout << "Calculated Quadric triangles" << std::endl;
+   // Deduplicated edge set
+  std::set<std::pair<int,int>> seen;
+  std::priority_queue<Edge, std::vector<Edge>, EdgeCompare> pq;
+
+  for(auto& edge: edges) {
+    if(edge.v1 < 0 || edge.v1 >= (int)vertices.size()) continue;
+    if(edge.v2 < 0 || edge.v2 >= (int)vertices.size()) continue;
+    if(!vertices[edge.v1].valid || !vertices[edge.v2].valid) continue;
+
+    int a = std::min(edge.v1, edge.v2);
+    int b = std::max(edge.v1, edge.v2);
+    if(!seen.insert({a, b}).second) continue;
+    
+    computeEdgeCost(edge); 
+    pq.push(edge);                         
+  }
+  
+  std::cout << "Computed edge costs and made pq" << std::endl;
+
+  int validCount = 0;
+  for(const auto& t : triangulatedFaces){
+    if(t.valid) validCount++;
+  }  
+  std::cout << "Starting Triangles: " << validCount << std::endl;       
+  while(!pq.empty() && validCount > target_count){
+    Edge edge = pq.top();
+    pq.pop();
+
+    //Checks 
+    if(hasMoreThanTwoNeighbors(edge.v1, edge.v2)) continue;
+    if(isBoundaryEdge(edge.v1, edge.v2)) continue;
+    if(!triangleFlipCheck(edge.v1, edge.v2, edge.collapsePosition)) continue;
+    
+    int removed = 0;
+    for(int fi : vertices[edge.v1].connectedFaces) {
+        auto& t = triangulatedFaces[fi];
+        if(t.valid && (t.v0 == edge.v2 || t.v1 == edge.v2 || t.v2 == edge.v2))
+            removed++;
+    }
+    //collapse edge 
+    collapseEdge(edge);
+    updateConnectivityLocal(edge.v1,edge.v2); 
+    
+    auto& neighbors = vertices[edge.v1].connectedVertices;
+    for(int v : neighbors){
+        Edge newEdge(edge.v1, v);
+        computeEdgeCost(newEdge);
+        pq.push(newEdge);
+    }
+    validCount -= removed;
+
+    std::cout << "Invalid Triangles: " << validCount << std::endl;
+  }
+}
+
 // ----------------- Connectivity --------------------------------
 void Mesh::buildConnectivity() {
    for(auto& v: vertices){
@@ -237,11 +261,41 @@ void Mesh::updateConnectivityLocal(int v1, int v2){
 }
 }
 
+void Mesh::collapseEdge(Edge& edge){
+  Vec3 newPos = edge.collapsePosition; 
+  vertices[edge.v1].v = newPos;
+  
+  vertices[edge.v1].q = vertices[edge.v1].q + vertices[edge.v2].q;
+
+  replaceVertex(edge.v2, edge.v1);
+  removeDegenerateTriangles();
+  vertices[edge.v2].valid = false;
+}
+
 std::set<int> Mesh::getConnectedVertices(int v) {
     return vertices[v].connectedVertices;
 }
 
+bool Mesh::isBoundaryEdge(int v1, int v2) {
+    int count = 0;
 
+    for(auto faceIndex : vertices[v1].connectedFaces) {
+        auto& t = triangulatedFaces[faceIndex];
+
+        if(
+            (t.v0 == v1 && t.v1 == v2) ||
+            (t.v1 == v1 && t.v2 == v2) ||
+            (t.v2 == v1 && t.v0 == v2) ||
+            (t.v0 == v2 && t.v1 == v1) ||
+            (t.v1 == v2 && t.v2 == v1) ||
+            (t.v2 == v2 && t.v0 == v1)
+        ) {
+            count++;
+        }
+    }
+
+    return count == 1;
+}
 
 Vec3 Mesh::computeNormal(const Triangle& t) {
     Vec3 a = vertices[t.v0].v;
@@ -318,27 +372,50 @@ bool Mesh::hasMoreThanTwoNeighbors(int v1, int v2) {
     return false;
 }
 
-bool Mesh::isBoundaryEdge(int v1, int v2) {
-    int count = 0;
+// Private methods
 
-    for(auto faceIndex : vertices[v1].connectedFaces) {
-        auto& t = triangulatedFaces[faceIndex];
+void Mesh::parseMtlFile(
+    const std::string& mtl_path,
+    std::map<std::string, Material>& materials
+) {
+  std::ifstream mtlInputFile(mtl_path);
+  if(!mtlInputFile.is_open()){
+    std::cerr << "Error opening mtl file" << std::endl;
+    return;
+  }
 
-        if(
-            (t.v0 == v1 && t.v1 == v2) ||
-            (t.v1 == v1 && t.v2 == v2) ||
-            (t.v2 == v1 && t.v0 == v2) ||
-            (t.v0 == v2 && t.v1 == v1) ||
-            (t.v1 == v2 && t.v2 == v1) ||
-            (t.v2 == v2 && t.v0 == v1)
-        ) {
-            count++;
-        }
+  std::string line;
+  Material current;
+  bool hasMaterial = false; 
+
+  while (std::getline(mtlInputFile, line)){
+    if( line.empty() || line[0] == '#') continue;
+
+    std::istringstream ss(line);
+    std::string keyword; 
+    ss >> keyword; 
+
+    if(keyword == "newmtl"){
+      if (hasMaterial) {
+        //save it
+        materials[current.name] = current;
+      }
+      ss >> current.name;
+      current.r = current.g = current.b = 1.0f; //default white 
+      hasMaterial = true;
     }
+    else if (keyword == "Kd") {
+      ss >> current.r >> current.g >> current.b;
+    }
+    //can add ka ks later 
+  }
 
-    return count == 1;
+  if(hasMaterial){
+    materials[current.name] = current; 
+  }
+
+  return; 
 }
-// -------------------- QEM
 
 void Mesh::replaceVertex(int oldV, int newV){
   for(auto& tri: triangulatedFaces) {
@@ -348,7 +425,6 @@ void Mesh::replaceVertex(int oldV, int newV){
   }
 }
 
-
 void Mesh::removeDegenerateTriangles(){
   for(auto& t : triangulatedFaces){
     if(t.v0 == t.v1 || t.v1 == t.v2 || t.v2 == t.v0){
@@ -356,23 +432,6 @@ void Mesh::removeDegenerateTriangles(){
     }
   }
 }
-
-void Mesh::collapseEdge(Edge& edge){
-  Vec3 newPos = edge.collapsePosition; 
-  vertices[edge.v1].v = newPos;
-  
-  vertices[edge.v1].q = vertices[edge.v1].q + vertices[edge.v2].q;
-
-  replaceVertex(edge.v2, edge.v1);
-  removeDegenerateTriangles();
-  vertices[edge.v2].valid = false;
-}
-
-struct EdgeCompare {
-  bool operator()(const Edge& a, const Edge& b) const {
-    return a.error > b.error;
-  }
-};
 
 void Mesh::computeEdgeCost(Edge& edge) {
     Vertex& v1 = vertices[edge.v1];
@@ -400,68 +459,5 @@ void Mesh::computeEdgeCost(Edge& edge) {
 
     edge.collapsePosition = best;
     edge.error = Q.evaluate(best);
-}
-void Mesh::applyQEM(int target_count) {
-  std::cout << "Build Connectivity" << std::endl;
-  buildConnectivity();
-  //Compute Quadric 
-  for(const auto& tri : triangulatedFaces){
-    Quadric::quadricTriangle(vertices[tri.v0], vertices[tri.v1], vertices[tri.v2]);
-  }
-
-  std::cout << "Calculated Quadric triangles" << std::endl;
-   // Deduplicated edge set
-  std::set<std::pair<int,int>> seen;
-  std::priority_queue<Edge, std::vector<Edge>, EdgeCompare> pq;
-
-  for(auto& edge: edges) {
-    if(edge.v1 < 0 || edge.v1 >= (int)vertices.size()) continue;
-    if(edge.v2 < 0 || edge.v2 >= (int)vertices.size()) continue;
-    if(!vertices[edge.v1].valid || !vertices[edge.v2].valid) continue;
-
-    int a = std::min(edge.v1, edge.v2);
-    int b = std::max(edge.v1, edge.v2);
-    if(!seen.insert({a, b}).second) continue;
-    
-    computeEdgeCost(edge); 
-    pq.push(edge);                         
-  }
-  
-  std::cout << "Computed edge costs and made pq" << std::endl;
-
-  int validCount = 0;
-  for(const auto& t : triangulatedFaces){
-    if(t.valid) validCount++;
-  }  
-  std::cout << "Starting Triangles: " << validCount << std::endl;       
-  while(!pq.empty() && validCount > target_count){
-    Edge edge = pq.top();
-    pq.pop();
-
-    //Checks 
-    if(hasMoreThanTwoNeighbors(edge.v1, edge.v2)) continue;
-    if(isBoundaryEdge(edge.v1, edge.v2)) continue;
-    if(!triangleFlipCheck(edge.v1, edge.v2, edge.collapsePosition)) continue;
-    
-    int removed = 0;
-    for(int fi : vertices[edge.v1].connectedFaces) {
-        auto& t = triangulatedFaces[fi];
-        if(t.valid && (t.v0 == edge.v2 || t.v1 == edge.v2 || t.v2 == edge.v2))
-            removed++;
-    }
-    //collapse edge 
-    collapseEdge(edge);
-    updateConnectivityLocal(edge.v1,edge.v2); 
-    
-    auto& neighbors = vertices[edge.v1].connectedVertices;
-    for(int v : neighbors){
-        Edge newEdge(edge.v1, v);
-        computeEdgeCost(newEdge);
-        pq.push(newEdge);
-    }
-    validCount -= removed;
-
-    std::cout << "Invalid Triangles: " << validCount << std::endl;
-  }
 }
 
